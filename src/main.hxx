@@ -6,5 +6,5 @@
 #include "transpose.hxx"
 #include "mtx.hxx"
 #include "pagerank.hxx"
-#include "pagerankClass.hxx"
-#include "pagerankCsr.hxx"
+#include "pagerankSeq.hxx"
+#include "pagerankOmp.hxx"
