@@ -57,7 +57,7 @@ int pagerankSeqCore(vector<T>& a, vector<T>& r, vector<T>& f, vector<T>& c, cons
 }
 
 
-// Find pagerank using CSR representation of DiGraph.
+// Find pagerank using a single thread.
 // @param xt transpose graph, with vertex-data=out-degree
 // @param q initial ranks (optional)
 // @param o options {damping=0.85, tolerance=1e-6, maxIterations=500}

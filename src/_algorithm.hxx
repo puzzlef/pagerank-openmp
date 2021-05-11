@@ -77,6 +77,15 @@ void copy(vector<T>& a, const vector<T>& x) {
 }
 
 
+template <class T>
+void copyOmp(vector<T>& a, const vector<T>& x) {
+  int N = x.size();
+  #pragma omp parallel for schedule(static,4096)
+  for (int i=0; i<N; i++)
+    a[i] = x[i];
+}
+
+
 
 
 // FILL
@@ -91,6 +100,19 @@ void fill(T *a, int N, const T& v) {
 template <class T>
 void fill(vector<T>& a, const T& v) {
   fill(a.begin(), a.end(), v);
+}
+
+
+template <class T>
+void fillOmp(T *a, int N, const T& v) {
+  #pragma omp parallel for schedule(static,4096)
+  for (int i=0; i<N; i++)
+    a[i] = v;
+}
+
+template <class T>
+void fillOmp(vector<T>& a, const T& v) {
+  fillOmp(a.data(), (int) a.size(), v);
 }
 
 
@@ -202,6 +224,21 @@ auto absError(const vector<T>& x, const vector<T>& y) {
 }
 
 
+template <class T>
+auto absErrorOmp(const T *x, const T *y, int N) {
+  T a = T();
+  #pragma omp parallel for schedule(static,4096) reduction(+:a)
+  for (int i=0; i<N; i++)
+    a += abs(x[i] - y[i]);
+  return a;
+}
+
+template <class T>
+auto absErrorOmp(const vector<T>& x, const vector<T>& y) {
+  return absErrorOmp(x.data(), y.data(), x.size());
+}
+
+
 
 
 // MULTIPLY
@@ -216,4 +253,17 @@ void multiply(T *a, const T *x, const T *y, int N) {
 template <class T>
 void multiply(vector<T>& a, const vector<T>& x, const vector<T>& y) {
   multiply(a.data(), x.data(), y.data(), x.size());
+}
+
+
+template <class T>
+void multiplyOmp(T *a, const T *x, const T *y, int N) {
+  #pragma omp parallel for schedule(static,4096)
+  for (int i=0; i<N; i++)
+    a[i] = x[i] * y[i];
+}
+
+template <class T>
+void multiplyOmp(vector<T>& a, const vector<T>& x, const vector<T>& y) {
+  multiplyOmp(a.data(), x.data(), y.data(), x.size());
 }
