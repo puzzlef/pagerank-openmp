@@ -4,6 +4,7 @@
 #include "vertices.hxx"
 #include "edges.hxx"
 #include "pagerank.hxx"
+#include "pagerankUniform.hxx"
 
 using std::swap;
 
@@ -33,14 +34,14 @@ void pagerankCalculate(vector<T>& a, const vector<T>& c, const vector<int>& vfro
 }
 
 template <class T>
-int pagerankSeqLoop(vector<T>& a, vector<T>& r, const vector<T>& f, vector<T>& c, const vector<int>& vfrom, const vector<int>& efrom, const vector<int>& vdata, int N, T p, T E, int L) {
+int pagerankHybridLoop(vector<T>& a, vector<T>& r, const vector<T>& f, vector<T>& c, const vector<int>& vfrom, const vector<int>& efrom, const vector<int>& vdata, int N, T p, T E, int L) {
   int l = 0;
   T e0 = T();
   for (; l<L; l++) {
-    T c0 = pagerankTeleport(r, vfrom, efrom, vdata, N, p);
+    T c0 = pagerankTeleportOmp(r, vfrom, efrom, vdata, N, p);
     multiply(c, r, f);
-    pagerankCalculate(a, c, vfrom, efrom, vdata, N, c0);
-    T e1 = absError(a, r);
+    pagerankCalculateOmp(a, c, vfrom, efrom, vdata, N, c0);
+    T e1 = absErrorOmp(a, r);
     if (e1 < E || e1 == e0) break;
     swap(a, r);
     e0 = e1;
@@ -49,21 +50,21 @@ int pagerankSeqLoop(vector<T>& a, vector<T>& r, const vector<T>& f, vector<T>& c
 }
 
 template <class T>
-int pagerankSeqCore(vector<T>& a, vector<T>& r, vector<T>& f, vector<T>& c, const vector<int>& vfrom, const vector<int>& efrom, const vector<int>& vdata, int N, const vector<T> *q, T p, T E, int L) {
+int pagerankHybridCore(vector<T>& a, vector<T>& r, vector<T>& f, vector<T>& c, const vector<int>& vfrom, const vector<int>& efrom, const vector<int>& vdata, int N, const vector<T> *q, T p, T E, int L) {
   if (q) copy(r, *q);
   else fill(r, T(1)/N);
   pagerankFactor(f, vfrom, efrom, vdata, N, p);
-  return pagerankSeqLoop(a, r, f, c, vfrom, efrom, vdata, N, p, E, L);
+  return pagerankHybridLoop(a, r, f, c, vfrom, efrom, vdata, N, p, E, L);
 }
 
 
-// Find pagerank using a single thread.
+// Find pagerank using hybrid OpenMP (some routines are sequential).
 // @param xt transpose graph, with vertex-data=out-degree
 // @param q initial ranks (optional)
 // @param o options {damping=0.85, tolerance=1e-6, maxIterations=500}
 // @returns {ranks, iterations, time}
 template <class G, class T=float>
-PagerankResult<T> pagerankSeq(const G& xt, const vector<T> *q=nullptr, PagerankOptions<T> o={}) {
+PagerankResult<T> pagerankHybrid(const G& xt, const vector<T> *q=nullptr, PagerankOptions<T> o={}) {
   T    p = o.damping;
   T    E = o.tolerance;
   int  L = o.maxIterations, l;
@@ -72,6 +73,6 @@ PagerankResult<T> pagerankSeq(const G& xt, const vector<T> *q=nullptr, PagerankO
   auto vdata = vertexData(xt);
   int  N     = xt.order();
   vector<T> a(N), r(N), f(N), c(N);
-  float t = measureDuration([&]() { l = pagerankSeqCore(a, r, f, c, vfrom, efrom, vdata, N, q, p, E, L); }, o.repeat);
+  float t = measureDuration([&]() { l = pagerankHybridCore(a, r, f, c, vfrom, efrom, vdata, N, q, p, E, L); }, o.repeat);
   return {vertexContainer(xt, a), l, t};
 }

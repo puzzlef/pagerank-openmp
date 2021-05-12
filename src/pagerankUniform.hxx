@@ -60,7 +60,7 @@ int pagerankUniformCore(vector<T>& a, vector<T>& r, vector<T>& f, vector<T>& c, 
 }
 
 
-// Find pagerank accelerated using OpenMP.
+// Find pagerank using uniform OpenMP (all routines use OpenMP).
 // @param xt transpose graph, with vertex-data=out-degree
 // @param q initial ranks (optional)
 // @param o options {damping=0.85, tolerance=1e-6, maxIterations=500}
