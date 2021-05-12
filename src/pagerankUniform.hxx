@@ -29,20 +29,20 @@ void pagerankFactorOmp(vector<T>& a, const vector<int>& vfrom, const vector<int>
 }
 
 template <class T>
-void pagerankOmpOnce(vector<T>& a, const vector<T>& c, const vector<int>& vfrom, const vector<int>& efrom, const vector<int>& vdata, int N, T c0) {
+void pagerankCalculateOmp(vector<T>& a, const vector<T>& c, const vector<int>& vfrom, const vector<int>& efrom, const vector<int>& vdata, int N, T c0) {
   #pragma omp parallel for schedule(static,4096)
   for (int v=0; v<N; v++)
     a[v] = c0 + sumAt(c, slice(efrom, vfrom[v], vfrom[v+1]));
 }
 
 template <class T>
-int pagerankOmpLoop(vector<T>& a, vector<T>& r, const vector<T>& f, vector<T>& c, const vector<int>& vfrom, const vector<int>& efrom, const vector<int>& vdata, int N, T p, T E, int L) {
+int pagerankUniformLoop(vector<T>& a, vector<T>& r, const vector<T>& f, vector<T>& c, const vector<int>& vfrom, const vector<int>& efrom, const vector<int>& vdata, int N, T p, T E, int L) {
   int l = 0;
   T e0 = T();
   for (; l<L; l++) {
     T c0 = pagerankTeleportOmp(r, vfrom, efrom, vdata, N, p);
     multiplyOmp(c, r, f);
-    pagerankOmpOnce(a, c, vfrom, efrom, vdata, N, c0);
+    pagerankCalculateOmp(a, c, vfrom, efrom, vdata, N, c0);
     T e1 = absErrorOmp(a, r);
     if (e1 < E || e1 == e0) break;
     swap(a, r);
@@ -52,11 +52,11 @@ int pagerankOmpLoop(vector<T>& a, vector<T>& r, const vector<T>& f, vector<T>& c
 }
 
 template <class T>
-int pagerankOmpCore(vector<T>& a, vector<T>& r, vector<T>& f, vector<T>& c, const vector<int>& vfrom, const vector<int>& efrom, const vector<int>& vdata, int N, const vector<T> *q, T p, T E, int L) {
+int pagerankUniformCore(vector<T>& a, vector<T>& r, vector<T>& f, vector<T>& c, const vector<int>& vfrom, const vector<int>& efrom, const vector<int>& vdata, int N, const vector<T> *q, T p, T E, int L) {
   if (q) copyOmp(r, *q);
   else fillOmp(r, T(1)/N);
   pagerankFactorOmp(f, vfrom, efrom, vdata, N, p);
-  return pagerankOmpLoop(a, r, f, c, vfrom, efrom, vdata, N, p, E, L);
+  return pagerankUniformLoop(a, r, f, c, vfrom, efrom, vdata, N, p, E, L);
 }
 
 
@@ -66,7 +66,7 @@ int pagerankOmpCore(vector<T>& a, vector<T>& r, vector<T>& f, vector<T>& c, cons
 // @param o options {damping=0.85, tolerance=1e-6, maxIterations=500}
 // @returns {ranks, iterations, time}
 template <class G, class T=float>
-PagerankResult<T> pagerankOmp(const G& xt, const vector<T> *q=nullptr, PagerankOptions<T> o={}) {
+PagerankResult<T> pagerankUniform(const G& xt, const vector<T> *q=nullptr, PagerankOptions<T> o={}) {
   T    p = o.damping;
   T    E = o.tolerance;
   int  L = o.maxIterations, l;
@@ -75,6 +75,6 @@ PagerankResult<T> pagerankOmp(const G& xt, const vector<T> *q=nullptr, PagerankO
   auto vdata = vertexData(xt);
   int  N     = xt.order();
   vector<T> a(N), r(N), f(N), c(N);
-  float t = measureDuration([&]() { l = pagerankOmpCore(a, r, f, c, vfrom, efrom, vdata, N, q, p, E, L); }, o.repeat);
+  float t = measureDuration([&]() { l = pagerankUniformCore(a, r, f, c, vfrom, efrom, vdata, N, q, p, E, L); }, o.repeat);
   return {vertexContainer(xt, a), l, t};
 }

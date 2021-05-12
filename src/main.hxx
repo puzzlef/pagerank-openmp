@@ -7,4 +7,4 @@
 #include "mtx.hxx"
 #include "pagerank.hxx"
 #include "pagerankSeq.hxx"
-#include "pagerankOmp.hxx"
+#include "pagerankUniform.hxx"
