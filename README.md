@@ -1,4 +1,4 @@
-Performance of uniform-OpenMP based vs hybrid-OpenMP based PageRank (pull, CSR).
+Performance of uniform-OpenMP based vs hybrid-OpenMP based PageRank ([pull], [CSR]).
 
 This experiment was for comparing the performance between:
 1. Find pagerank using **uniform** OpenMP (all routines use OpenMP).
@@ -17,6 +17,8 @@ from `2` to `48`. All outputs are saved in [out/](out/) and outputs for `4`,
 comparision on single-threaded approach, and OpenMP. The input data used for
 this experiment is available at ["graphs"] (for small ones), and the
 [SuiteSparse Matrix Collection].
+
+<br>
 
 ```bash
 $ g++ -O3 main.cxx
@@ -151,6 +153,8 @@ $ ...
 # [02581.598 ms; 062 iters.] [0.0000e+00 err.] pagerankUniform
 # [03217.129 ms; 062 iters.] [0.0000e+00 err.] pagerankHybrid
 ```
+
+<br>
 
 ```bash
 $ g++ -O3 main.cxx
@@ -300,6 +304,8 @@ $ ...
 
 [![](https://i.imgur.com/wzUtVOY.jpg)](https://www.youtube.com/watch?v=rKv_l1RnSqs)
 
+[pull]: https://github.com/puzzlef/pagerank-push-vs-pull
+[CSR]: https://github.com/puzzlef/pagerank-class-vs-csr
 ["pagerank-sequential-vs-openmp"]: https://github.com/puzzlef/pagerank-sequential-vs-openmp
 ["graphs"]: https://github.com/puzzlef/graphs
 [SuiteSparse Matrix Collection]: https://suitesparse-collection-website.herokuapp.com
