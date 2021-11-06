@@ -60,8 +60,8 @@ int pagerankOmpLoop(vector<T>& a, vector<T>& r, vector<T>& c, const vector<T>& f
   T  c0 = (1-p)/N;
   int l = 0;
   for (; l<L; ++l) {
-    multiplyOmp(c, r, f, i, n);
-    pagerankCalculateOmp(a, c, vfrom, efrom, i, n, c0);
+    multiply(c, r, f, i, n);
+    pagerankCalculate(a, c, vfrom, efrom, i, n, c0);
     T el = pagerankErrorOmp(a, r, i, n, EF);
     if (el < E) { ++l; break; }
     swap(a, r);
@@ -92,8 +92,8 @@ PagerankResult<T> pagerankOmp(const H& xt, const vector<T> *q=nullptr, PagerankO
     if (q) copyOmp(r, qc);
     else fillOmp(r, T(1)/N);
     copyOmp(a, r);
-    mark([&] { pagerankFactorOmp(f, vdata, 0, N, p); });
-    mark([&] { l = pagerankSeqLoop(a, r, c, f, vfrom, efrom, 0, N, N, p, E, L, EF); });
+    mark([&] { pagerankFactor(f, vdata, 0, N, p); });
+    mark([&] { l = pagerankOmpLoop(a, r, c, f, vfrom, efrom, 0, N, N, p, E, L, EF); });
   }, o.repeat);
   return {decompressContainer(xt, a), l, t};
 }
