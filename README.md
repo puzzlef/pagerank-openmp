@@ -1,6 +1,8 @@
 Comparing various launch configs for **CUDA block-per-vertex** based PageRank
 ([pull], [CSR]).
 
+`TODO!`
+
 This experiment was for finding a suitable **launch config** for
 **CUDA block-per-vertex**. For the launch config, the **block-size** (threads)
 was adjusted from `32`-`1024`, and the **grid-limit** (max grid-size) was
