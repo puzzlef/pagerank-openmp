@@ -1,28 +1,14 @@
-Performance of **sequential** execution based vs **OpenMP** based PageRank
-([pull], [CSR]).
+Performance of **sequential** execution based vs **OpenMP** based PageRank ([pull], [CSR]).
 
 This experiment was for comparing the performance between:
 1. Find pagerank using a single thread (**sequential**).
 2. Find pagerank accelerated using **OpenMP**.
 
-Both techniques were attempted on different types of graphs, running each
-technique 5 times per graph to get a good time measure. Number of threads
-for this experiment (using `OMP_NUM_THREADS`) was varied from `2` to `48`.
-**OpenMP** does seem to provide a **clear benefit** for most graphs (except
-for the smallest ones). This speedup is definitely not directly proportional
-to the number of threads, as one would normally expect (Amdahl's law).
+Both techniques were attempted on different types of graphs, running each technique 5 times per graph to get a good time measure. Number of threads for this experiment (using `OMP_NUM_THREADS`) was varied from `2` to `48`. **OpenMP** does seem to provide a **clear benefit** for most graphs (except for the smallest ones). This speedup is definitely not directly proportional to the number of threads, as one would normally expect (Amdahl's law).
 
-Note that there is still room for improvement with **OpenMP** by using
-sequential versions of certain routines instead of OpenMP versions because
-not all calculations benefit from multiple threads (ex.
-["multiply-sequential-vs-openmp"]). Also note that neither approach makes
-use of *SIMD instructions* which are available on all modern hardware.
+Note that there is still room for improvement with **OpenMP** by using sequential versions of certain routines instead of OpenMP versions because not all calculations benefit from multiple threads (ex. ["multiply-sequential-vs-openmp"]). Also note that neither approach makes use of *SIMD instructions* which are available on all modern hardware.
 
-All outputs are saved in [out](out/) and a small part of the output is listed
-here. Some [charts] are also included below, generated from [sheets]. The input
-data used for this experiment is available at ["graphs"] (for small ones), and
-the [SuiteSparse Matrix Collection]. This experiment was done with guidance
-from [Prof. Dip Sankar Banerjee] and [Prof. Kishore Kothapalli].
+All outputs are saved in [out](out/) and a small part of the output is listed here. Some [charts] are also included below, generated from [sheets]. The input data used for this experiment is available at ["graphs"] (for small ones), and the [SuiteSparse Matrix Collection]. This experiment was done with guidance from [Prof. Dip Sankar Banerjee] and [Prof. Kishore Kothapalli].
 
 <br>
 
@@ -95,6 +81,8 @@ $ ...
 <br>
 
 [![](https://i.imgur.com/5vdxPZ3.jpg)](https://www.youtube.com/watch?v=rKv_l1RnSqs)
+[![DOI](https://zenodo.org/badge/366356464.svg)](https://zenodo.org/badge/latestdoi/366356464)
+
 
 [Prof. Dip Sankar Banerjee]: https://sites.google.com/site/dipsankarban/
 [Prof. Kishore Kothapalli]: https://cstar.iiit.ac.in/~kkishore/
