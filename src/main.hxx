@@ -22,3 +22,4 @@
 #include "pagerankSeq.hxx"
 #include "pagerankMonolithicSeq.hxx"
 #include "pagerankOmp.hxx"
+#include "pagerankMonolithicOmp.hxx"
