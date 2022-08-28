@@ -51,25 +51,39 @@ inline size_t copyValuesOmp(const vector<T>& x, vector<TA>& a, size_t i, size_t 
 }
 
 
+template <class T, class TA>
+inline size_t copyValuesOmpW(TA *a, const T *x, size_t N) {
+  return copyValuesOmp(x, a, N);
+}
+template <class T, class TA>
+inline size_t copyValuesOmpW(vector<TA>& a, const vector<T>& x) {
+  return copyValuesOmp(x, a);
+}
+template <class T, class TA>
+inline size_t copyValuesOmpW(vector<TA>& a, const vector<T>& x, size_t i, size_t N) {
+  return copyValuesOmp(x, a, i, N);
+}
+
+
 
 
 // FILL-VALUE
 // ----------
 
 template <class T, class V>
-void fillValueOmp(T *a, size_t N, const V& v) {
-  if (N<SIZE_MIN_OMPM) { fillValue(a, N, v); return; }
+void fillValueOmpU(T *a, size_t N, const V& v) {
+  if (N<SIZE_MIN_OMPM) { fillValueU(a, N, v); return; }
   #pragma omp parallel for schedule(auto)
   for (size_t i=0; i<N; ++i)
     a[i] = v;
 }
 template <class T, class V>
-inline void fillValueOmp(vector<T>& a, const V& v) {
-  fillValueOmp(a.data(), a.size(), v);
+inline void fillValueOmpU(vector<T>& a, const V& v) {
+  fillValueOmpU(a.data(), a.size(), v);
 }
 template <class T, class V>
-inline void fillValueOmp(vector<T>& a, size_t i, size_t N, const V& v) {
-  fillValueOmp(a.data()+i, N, v);
+inline void fillValueOmpU(vector<T>& a, size_t i, size_t N, const V& v) {
+  fillValueOmpU(a.data()+i, N, v);
 }
 
 
@@ -323,6 +337,24 @@ inline V l1NormOmp(const vector<TX>& x, const vector<TY>& y, size_t i, size_t N,
 }
 
 
+template <class T, class V=T>
+V l1NormOmp(const T *x, size_t N, V a=V()) {
+  if (N<SIZE_MIN_OMPR) return l1Norm(x, N, a);
+  #pragma omp parallel for schedule(auto) reduction(+:a)
+  for (size_t i=0; i<N; i++)
+    a += abs(x[i]);
+  return a;
+}
+template <class T, class V=T>
+inline V l1NormOmp(const vector<T>& x, V a=V()) {
+  return l1NormOmp(x.data(), x.size(), a);
+}
+template <class T, class V=T>
+inline V l1NormOmp(const vector<T>& x, size_t i, size_t N, V a=V()) {
+  return l1NormOmp(x.data()+i, N, a);
+}
+
+
 
 
 // L2-NORM
@@ -343,6 +375,24 @@ inline V l2NormOmp(const vector<TX>& x, const vector<TY>& y, V a=V()) {
 template <class TX, class TY, class V=TX>
 inline V l2NormOmp(const vector<TX>& x, const vector<TY>& y, size_t i, size_t N, V a=V()) {
   return l2NormOmp(x.data()+i, y.data()+i, N, a);
+}
+
+
+template <class T, class V=T>
+V l2NormOmp(const T *x, size_t N, V a=V()) {
+  if (N<SIZE_MIN_OMPR) return l2Norm(x, N, a);
+  #pragma omp parallel for schedule(auto) reduction(+:a)
+  for (size_t i=0; i<N; i++)
+    a += x[i] * x[i];
+  return sqrt(a);
+}
+template <class T, class V=T>
+inline V l2NormOmp(const vector<T>& x, V a=V()) {
+  return l2NormOmp(x.data(), x.size(), a);
+}
+template <class T, class V=T>
+inline V l2NormOmp(const vector<T>& x, size_t i, size_t N, V a=V()) {
+  return l2NormOmp(x.data()+i, N, a);
 }
 
 
@@ -369,6 +419,24 @@ inline V liNormOmp(const vector<TX>& x, const vector<TY>& y, size_t i, size_t N,
 }
 
 
+template <class T, class V=T>
+V liNormOmp(const T *x, size_t N, V a=V()) {
+  if (N<SIZE_MIN_OMPR) return liNorm(x, N, a);
+  #pragma omp parallel for schedule(auto) reduction(+:a)
+  for (size_t i=0; i<N; i++)
+    a = max(a, abs(x[i]));
+  return a;
+}
+template <class T, class V=T>
+inline V liNormOmp(const vector<T>& x, V a=V()) {
+  return liNormOmp(x.data(), x.size(), a);
+}
+template <class T, class V=T>
+inline V liNormOmp(const vector<T>& x, size_t i, size_t N, V a=V()) {
+  return liNormOmp(x.data()+i, N, a);
+}
+
+
 
 
 // MULTIPLY-VALUES
@@ -388,6 +456,20 @@ inline void multiplyValuesOmp(const vector<TX>& x, const vector<TY>& y, vector<T
 template <class TX, class TY, class TA>
 inline void multiplyValuesOmp(const vector<TX>& x, const vector<TY>& y, vector<TA>& a, size_t i, size_t N) {
   multiplyValuesOmp(x.data()+i, y.data()+i, a.data()+i, N);
+}
+
+
+template <class TA, class TX, class TY>
+inline void multiplyValuesOmpW(TA *a, const TX *x, const TY *y, size_t N) {
+  multiplyValuesOmp(x, y, a, N);
+}
+template <class TX, class TY, class TA>
+inline void multiplyValuesOmpW(vector<TA>& a, const vector<TX>& x, const vector<TY>& y) {
+  multiplyValuesOmp(x, y, a);
+}
+template <class TX, class TY, class TA>
+inline void multiplyValuesOmpW(vector<TA>& a, const vector<TX>& x, const vector<TY>& y, size_t i, size_t N) {
+  multiplyValuesOmp(x, y, a, i, N);
 }
 
 
