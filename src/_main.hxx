@@ -8,3 +8,5 @@
 #include "_string.hxx"
 #include "_utility.hxx"
 #include "_vector.hxx"
+#include "_queue.hxx"
+#include "_bitset.hxx"
