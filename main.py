@@ -1,7 +1,7 @@
 # https://www.kaggle.com/wolfram77/puzzlef-pagerank-openmp-adjust-schedule
 import os
 from IPython.display import FileLink
-src="pagerank-openmp-adjust-launch"
+src="pagerank-openmp-adjust-schedule"
 inp="/kaggle/input/graphs"
 out="{}.txt".format(src)
 !printf "" > "$out"
@@ -11,14 +11,9 @@ display(FileLink(out))
 # Download program
 !rm -rf $src
 !git clone https://github.com/puzzlef/$src
-!echo ""
 
 # Run
-!g++ -O3 -fopenmp $src/main.cxx
-!ulimit -s unlimited && stdbuf --output=L ./a.out $inp/min-1DeadEnd.mtx      2>&1 | tee -a "$out"
-!ulimit -s unlimited && stdbuf --output=L ./a.out $inp/min-2SCC.mtx          2>&1 | tee -a "$out"
-!ulimit -s unlimited && stdbuf --output=L ./a.out $inp/min-4SCC.mtx          2>&1 | tee -a "$out"
-!ulimit -s unlimited && stdbuf --output=L ./a.out $inp/min-NvgraphEx.mtx     2>&1 | tee -a "$out"
+!g++ -std=c++17 -O3 -fopenmp $src/main.cxx
 !ulimit -s unlimited && stdbuf --output=L ./a.out $inp/web-Stanford.mtx      2>&1 | tee -a "$out"
 !ulimit -s unlimited && stdbuf --output=L ./a.out $inp/web-BerkStan.mtx      2>&1 | tee -a "$out"
 !ulimit -s unlimited && stdbuf --output=L ./a.out $inp/web-Google.mtx        2>&1 | tee -a "$out"

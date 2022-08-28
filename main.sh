@@ -7,14 +7,10 @@ printf "" > "$out"
 # Download program
 rm -rf $src
 git clone https://github.com/puzzlef/$src
-cd $src && echo ""
+cd $src
 
 # Run
-g++ -O3 -fopenmp main.cxx
-stdbuf --output=L ./a.out ~/data/min-1DeadEnd.mtx      2>&1 | tee -a "$out"
-stdbuf --output=L ./a.out ~/data/min-2SCC.mtx          2>&1 | tee -a "$out"
-stdbuf --output=L ./a.out ~/data/min-4SCC.mtx          2>&1 | tee -a "$out"
-stdbuf --output=L ./a.out ~/data/min-NvgraphEx.mtx     2>&1 | tee -a "$out"
+g++ -std=c++17 -O3 -fopenmp main.cxx
 stdbuf --output=L ./a.out ~/data/web-Stanford.mtx      2>&1 | tee -a "$out"
 stdbuf --output=L ./a.out ~/data/web-BerkStan.mtx      2>&1 | tee -a "$out"
 stdbuf --output=L ./a.out ~/data/web-Google.mtx        2>&1 | tee -a "$out"
