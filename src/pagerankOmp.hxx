@@ -55,7 +55,7 @@ T pagerankTeleportOmp(const vector<T>& r, const vector<int>& vdata, int N, T p) 
 template <class T>
 void pagerankCalculateOmpW(vector<T>& a, const vector<T>& c, const vector<int>& vfrom, const vector<int>& efrom, int i, int n, T c0) {
   if (n<SIZE_MIN_OMPM) { pagerankCalculateW(a, c, vfrom, efrom, i, n, c0); return; }
-  #pragma omp parallel for schedule(monotonic:runtime)
+  #pragma omp parallel for schedule(dynamic, 2048)
   for (int v=i; v<i+n; v++)
     a[v] = c0 + sumValuesAt(c, sliceIterable(efrom, vfrom[v], vfrom[v+1]));
 }
@@ -63,7 +63,7 @@ void pagerankCalculateOmpW(vector<T>& a, const vector<T>& c, const vector<int>& 
 template <class T>
 void pagerankCalculateOrderedOmpU(vector<T>& e, vector<T>& r, const vector<T>& f, const vector<int>& vfrom, const vector<int>& efrom, int i, int n, T c0) {
   if (n<SIZE_MIN_OMPM) { pagerankCalculateOrderedU(e, r, f, vfrom, efrom, i, n, c0); return; }
-  #pragma omp parallel for schedule(monotonic:runtime)
+  #pragma omp parallel for schedule(dynamic, 2048)
   for (int v=i; v<i+n; v++) {
     T a = c0;
     for (int u : sliceIterable(efrom, vfrom[v], vfrom[v+1]))

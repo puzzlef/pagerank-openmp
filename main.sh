@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-src="pagerank-openmp-adjust-schedule"
+src="pagerank-openmp-ordered-vs-unordered"
 out="/home/resources/Documents/subhajit/$src.log"
 ulimit -s unlimited
 printf "" > "$out"

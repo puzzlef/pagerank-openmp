@@ -28,42 +28,25 @@ void runPagerank(const G& x, const H& xt, int repeat) {
   using T = TYPE;
   vector<T> *init = nullptr;
 
-  // Find pagerank using a single thread.
+  // Find pagerank using a single thread (unordered).
   auto a1 = pagerankMonolithicSeq<false>(x, xt, init, {repeat});
   auto e1 = l1Norm(a1.ranks, a1.ranks);
-  printf("[%09.3f ms; %03d iters.] [%.4e err.] pagerankSeq\n", a1.time, a1.iterations, e1);
+  printf("[%09.3f ms; %03d iters.] [%.4e err.] pagerankSeqUnordered\n", a1.time, a1.iterations, e1);
 
-  // Find pagerank accelerated with OpenMP (static schedule).
-  for (int chunkSize=1; chunkSize<=65536; chunkSize*=2) {
-    omp_set_schedule(omp_sched_static, chunkSize);
-    auto a2 = pagerankMonolithicOmp<false>(x, xt, init, {repeat});
-    auto e2 = l1Norm(a2.ranks, a1.ranks);
-    printf("[%09.3f ms; %03d iters.] [%.4e err.] pagerankOmp {sch_kind: static, chunk_size: %d}\n", a2.time, a2.iterations, e2, chunkSize);
-  }
+  // Find pagerank using a single thread (ordered).
+  auto a2 = pagerankMonolithicSeq<true>(x, xt, init, {repeat});
+  auto e2 = l1Norm(a2.ranks, a1.ranks);
+  printf("[%09.3f ms; %03d iters.] [%.4e err.] pagerankSeqOrdered\n", a2.time, a2.iterations, e2);
 
-  // Find pagerank accelerated with OpenMP (dynamic schedule).
-  for (int chunkSize=1; chunkSize<=65536; chunkSize*=2) {
-    omp_set_schedule(omp_sched_dynamic, chunkSize);
-    auto a2 = pagerankMonolithicOmp<false>(x, xt, init, {repeat});
-    auto e2 = l1Norm(a2.ranks, a1.ranks);
-    printf("[%09.3f ms; %03d iters.] [%.4e err.] pagerankOmp {sch_kind: dynamic, chunk_size: %d}\n", a2.time, a2.iterations, e2, chunkSize);
-  }
+  // Find pagerank accelerated with OpenMP (unordered).
+  auto a3 = pagerankMonolithicOmp<false>(x, xt, init, {repeat});
+  auto e3 = l1Norm(a3.ranks, a1.ranks);
+  printf("[%09.3f ms; %03d iters.] [%.4e err.] pagerankOmpUnordered\n", a3.time, a3.iterations, e3);
 
-  // Find pagerank accelerated with OpenMP (guided schedule).
-  for (int chunkSize=1; chunkSize<=65536; chunkSize*=2) {
-    omp_set_schedule(omp_sched_guided, chunkSize);
-    auto a2 = pagerankMonolithicOmp<false>(x, xt, init, {repeat});
-    auto e2 = l1Norm(a2.ranks, a1.ranks);
-    printf("[%09.3f ms; %03d iters.] [%.4e err.] pagerankOmp {sch_kind: guided, chunk_size: %d}\n", a2.time, a2.iterations, e2, chunkSize);
-  }
-
-  // Find pagerank accelerated with OpenMP (auto schedule).
-  for (int chunkSize=1; chunkSize<=65536; chunkSize*=2) {
-    omp_set_schedule(omp_sched_auto, chunkSize);
-    auto a2 = pagerankMonolithicOmp<false>(x, xt, init, {repeat});
-    auto e2 = l1Norm(a2.ranks, a1.ranks);
-    printf("[%09.3f ms; %03d iters.] [%.4e err.] pagerankOmp {sch_kind: auto, chunk_size: %d}\n", a2.time, a2.iterations, e2, chunkSize);
-  }
+  // Find pagerank accelerated with OpenMP (ordered).
+  auto a4 = pagerankMonolithicOmp<true>(x, xt, init, {repeat});
+  auto e4 = l1Norm(a4.ranks, a1.ranks);
+  printf("[%09.3f ms; %03d iters.] [%.4e err.] pagerankOmpOrdered\n", a4.time, a4.iterations, e4);
 }
 
 
