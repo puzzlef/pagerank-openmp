@@ -38,8 +38,8 @@ to the same vector). In any case, **ordered PageRank** is indeed **faster than**
 All outputs are saved in a [gist] and a small part of the output is listed here.
 Some [charts] are also included below, generated from [sheets]. The input data
 used for this experiment is available from the [SuiteSparse Matrix Collection].
-This experiment was done with guidance from [Prof. Kishore Kothapalli] and
-[Prof. Dip Sankar Banerjee].
+This experiment was done with guidance from [Prof. Kishore Kothapalli],
+[Prof. Dip Sankar Banerjee], and [Prof. Sathya Peri].
 
 <br>
 
@@ -90,7 +90,8 @@ $ ...
 <br>
 
 
-[![](https://i.imgur.com/0XKZ240.jpg)](https://www.bleepingcomputer.com/review/gaming/minecraft-story-mode-is-fun-for-the-whole-family/)<br>
+[![](https://i.imgur.com/50yaKL7.jpg)](https://www.youtube.com/watch?v=g2tMcMQqSbA)<br>
+[![DOI](https://zenodo.org/badge/530082702.svg)](https://zenodo.org/badge/latestdoi/530082702)
 
 
 [(1)]: https://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.38.5427
@@ -100,6 +101,7 @@ $ ...
 [(5)]: https://gist.github.com/wolfram77/94c38b9cfbf0c855e5f42fa24a8602fc
 [Prof. Dip Sankar Banerjee]: https://sites.google.com/site/dipsankarban/
 [Prof. Kishore Kothapalli]: https://faculty.iiit.ac.in/~kkishore/
+[Prof. Sathya Peri]: https://people.iith.ac.in/sathya_p/
 [SuiteSparse Matrix Collection]: https://sparse.tamu.edu
 [OpenMP]: https://en.wikipedia.org/wiki/OpenMP
 [PageRank algorithm]: https://en.wikipedia.org/wiki/PageRank
