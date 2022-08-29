@@ -96,6 +96,7 @@ $ ...
 
 
 [![](https://i.imgur.com/0XKZ240.jpg)](https://www.bleepingcomputer.com/review/gaming/minecraft-story-mode-is-fun-for-the-whole-family/)<br>
+[![DOI](https://zenodo.org/badge/425239068.svg)](https://zenodo.org/badge/latestdoi/425239068)
 
 
 [Prof. Dip Sankar Banerjee]: https://sites.google.com/site/dipsankarban/
