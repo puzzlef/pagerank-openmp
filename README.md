@@ -1,99 +1,83 @@
-Comparing various launch configs for **CUDA block-per-vertex** based PageRank
-([pull], [CSR]).
+Comparing various schedules in [OpenMP]-based [PageRank algorithm] for
+[link analysis].
 
-`TODO!`
+In this experiment, we compare performance obtained for *OpenMP-based PageRank*
+for various *schedules*. Each thread is assigned a certain number of *vertices*
+to process. The **schedule kind** is adjusted among `static` / `dynamic` /
+`guided` / `auto`, and the **chunk size** is adjusted from `1` to `65536`. We do
+this for the **rank computation step**. PageRank factors, contributions, and
+teleport contribution computation is calculated with suitable OpenMP schedule
+(`auto`). We use the follwing PageRank parameters: damping factor `α = 0.85`,
+tolerance `τ = 10^-6`, and limit the maximum number of iterations to `L = 500`.
+The error between the current and the previous iteration is obtained with
+*L1-norm*, and is used to detect convergence.
 
-This experiment was for finding a suitable **launch config** for
-**CUDA block-per-vertex**. For the launch config, the **block-size** (threads)
-was adjusted from `32`-`1024`, and the **grid-limit** (max grid-size) was
-adjusted from `1024`-`32768`. Each config was run 5 times per graph to get a
-good time measure. `MAXx64` appears to be a good config for most graphs. Here
-`MAX` is the **grid-limit**, and `64` is the **block-size**. This launch
-config is for the entire graph, and could be slightly different for subset of
-graphs. Also note that this applies to *Tesla V100 PCIe 16GB*, and could be
-different for other GPUs. In order to measure error, [nvGraph] pagerank is
-taken as a reference.
+From the results, we observe that a **dynamic schedule with a chunk size of**
+**2048** appears to perform the **best**. This however may change based on the
+size of graphs in the dataset, or the system used. In such cases `auto` schedule
+may be used as a fallback. We also observe that the *difference in ranks*
+obtained from sequential and OpenMP-based approach is *relatively high*
+(`< 10^-3`) on *large directed graphs*. This may be due to the fact that parallel
+reduce performed for teleport contibution calculation differs from sequential
+reduce due to *inaccuracies associated with 32-bit floating point format*
+*(float)*, and can be avoided by using *64-bit floating point format (double)*.
 
-All outputs are saved in [out](out/) and a small part of the output is listed
-here. Some [charts] are also included below, generated from [sheets]. The input
-data used for this experiment is available at ["graphs"] (for small ones), and
-the [SuiteSparse Matrix Collection]. This experiment was done with guidance
-from [Prof. Dip Sankar Banerjee] and [Prof. Kishore Kothapalli].
+All outputs are saved in a [gist] and a small part of the output is listed here.
+Some [charts] are also included below, generated from [sheets]. The input data
+used for this experiment is available from the [SuiteSparse Matrix Collection].
+This experiment was done with guidance from [Prof. Kishore Kothapalli] and
+[Prof. Dip Sankar Banerjee].
 
 <br>
 
 ```bash
-$ nvcc -std=c++17 -Xcompiler -lnvgraph -O3 main.cu
-$ ./a.out ~/data/min-1DeadEnd.mtx
-$ ./a.out ~/data/min-2SCC.mtx
+$ g++ -std=c++17 -O3 -fopenmp main.cxx
+$ ./a.out ~/data/web-Stanford.mtx
+$ ./a.out ~/data/web-BerkStan.mtx
 $ ...
 
-# ...
-#
 # Loading graph /home/subhajit/data/web-Stanford.mtx ...
-# order: 281903 size: 2312497 {}
-# order: 281903 size: 2312497 {} (transposeWithDegree)
-# [00011.441 ms; 000 iters.] [0.0000e+00 err.] pagerankNvgraph
-# [00061.493 ms; 063 iters.] [6.9684e-07 err.] pagerankCuda<<<1024, 32>>>
-# [00042.466 ms; 063 iters.] [7.1421e-07 err.] pagerankCuda<<<1024, 64>>>
-# [00039.030 ms; 063 iters.] [6.9823e-07 err.] pagerankCuda<<<1024, 128>>>
-# [00065.472 ms; 063 iters.] [6.8380e-07 err.] pagerankCuda<<<1024, 256>>>
-# [00145.954 ms; 063 iters.] [6.8548e-07 err.] pagerankCuda<<<1024, 512>>>
-# [00329.866 ms; 063 iters.] [6.8467e-07 err.] pagerankCuda<<<1024, 1024>>>
-# [00051.042 ms; 063 iters.] [6.9684e-07 err.] pagerankCuda<<<2048, 32>>>
-# [00034.991 ms; 063 iters.] [7.1421e-07 err.] pagerankCuda<<<2048, 64>>>
-# [00036.222 ms; 063 iters.] [6.9823e-07 err.] pagerankCuda<<<2048, 128>>>
-# [00065.839 ms; 063 iters.] [6.8380e-07 err.] pagerankCuda<<<2048, 256>>>
-# [00133.297 ms; 063 iters.] [6.8548e-07 err.] pagerankCuda<<<2048, 512>>>
-# [00307.478 ms; 063 iters.] [6.8467e-07 err.] pagerankCuda<<<2048, 1024>>>
-# [00046.739 ms; 063 iters.] [6.9684e-07 err.] pagerankCuda<<<4096, 32>>>
-# [00030.503 ms; 063 iters.] [7.1421e-07 err.] pagerankCuda<<<4096, 64>>>
-# [00035.438 ms; 063 iters.] [6.9823e-07 err.] pagerankCuda<<<4096, 128>>>
-# [00060.317 ms; 063 iters.] [6.8380e-07 err.] pagerankCuda<<<4096, 256>>>
-# [00126.383 ms; 063 iters.] [6.8548e-07 err.] pagerankCuda<<<4096, 512>>>
-# [00306.623 ms; 063 iters.] [6.8467e-07 err.] pagerankCuda<<<4096, 1024>>>
-# [00048.424 ms; 063 iters.] [6.9684e-07 err.] pagerankCuda<<<8192, 32>>>
-# [00032.419 ms; 063 iters.] [7.1421e-07 err.] pagerankCuda<<<8192, 64>>>
-# [00033.686 ms; 063 iters.] [6.9823e-07 err.] pagerankCuda<<<8192, 128>>>
-# [00059.334 ms; 063 iters.] [6.8380e-07 err.] pagerankCuda<<<8192, 256>>>
-# [00125.928 ms; 063 iters.] [6.8548e-07 err.] pagerankCuda<<<8192, 512>>>
-# [00304.776 ms; 063 iters.] [6.8467e-07 err.] pagerankCuda<<<8192, 1024>>>
-# [00050.515 ms; 063 iters.] [6.9684e-07 err.] pagerankCuda<<<16384, 32>>>
-# [00034.612 ms; 063 iters.] [7.1421e-07 err.] pagerankCuda<<<16384, 64>>>
-# [00034.573 ms; 063 iters.] [6.9823e-07 err.] pagerankCuda<<<16384, 128>>>
-# [00059.193 ms; 063 iters.] [6.8380e-07 err.] pagerankCuda<<<16384, 256>>>
-# [00126.409 ms; 063 iters.] [6.8548e-07 err.] pagerankCuda<<<16384, 512>>>
-# [00304.214 ms; 063 iters.] [6.8467e-07 err.] pagerankCuda<<<16384, 1024>>>
-# [00051.362 ms; 063 iters.] [6.9684e-07 err.] pagerankCuda<<<32768, 32>>>
-# [00035.592 ms; 063 iters.] [7.1421e-07 err.] pagerankCuda<<<32768, 64>>>
-# [00036.476 ms; 063 iters.] [6.9823e-07 err.] pagerankCuda<<<32768, 128>>>
-# [00058.218 ms; 063 iters.] [6.8380e-07 err.] pagerankCuda<<<32768, 256>>>
-# [00126.185 ms; 063 iters.] [6.8548e-07 err.] pagerankCuda<<<32768, 512>>>
-# [00306.288 ms; 063 iters.] [6.8467e-07 err.] pagerankCuda<<<32768, 1024>>>
+# order: 281903 size: 2312497 [directed] {}
+# order: 281903 size: 2312497 [directed] {} (transposeWithDegree)
+# OMP_NUM_THREADS=12
+# [00498.733 ms; 063 iters.] [0.0000e+00 err.] pagerankSeq
+# [00116.266 ms; 063 iters.] [2.7737e-07 err.] pagerankOmp {sch_kind: static, chunk_size: 1}
+# [00128.507 ms; 063 iters.] [2.7737e-07 err.] pagerankOmp {sch_kind: static, chunk_size: 2}
+# [00083.807 ms; 063 iters.] [2.7737e-07 err.] pagerankOmp {sch_kind: static, chunk_size: 4}
+# ...
+# [00057.358 ms; 063 iters.] [2.7737e-07 err.] pagerankOmp {sch_kind: auto, chunk_size: 16384}
+# [00055.914 ms; 063 iters.] [2.7737e-07 err.] pagerankOmp {sch_kind: auto, chunk_size: 32768}
+# [00055.303 ms; 063 iters.] [2.7935e-07 err.] pagerankOmp {sch_kind: auto, chunk_size: 65536}
 #
+# Loading graph /home/subhajit/data/web-BerkStan.mtx ...
+# order: 685230 size: 7600595 [directed] {}
+# order: 685230 size: 7600595 [directed] {} (transposeWithDegree)
+# OMP_NUM_THREADS=12
+# [00969.713 ms; 064 iters.] [0.0000e+00 err.] pagerankSeq
+# [00266.877 ms; 064 iters.] [3.6591e-06 err.] pagerankOmp {sch_kind: static, chunk_size: 1}
+# [00227.865 ms; 064 iters.] [3.6591e-06 err.] pagerankOmp {sch_kind: static, chunk_size: 2}
+# [00207.485 ms; 064 iters.] [3.6591e-06 err.] pagerankOmp {sch_kind: static, chunk_size: 4}
 # ...
 ```
 
-[![](https://i.imgur.com/bwedZN8.gif)][sheetp]
-[![](https://i.imgur.com/SYY0VTV.gif)][sheetp]
-[![](https://i.imgur.com/0ThK2pd.gif)][sheetp]
-[![](https://i.imgur.com/a7AKdLx.gif)][sheetp]
-[![](https://i.imgur.com/sxbRgJF.gif)][sheetp]
-[![](https://i.imgur.com/crTZjmn.gif)][sheetp]
-[![](https://i.imgur.com/cxLbgqj.gif)][sheetp]
-[![](https://i.imgur.com/m9KGsyj.gif)][sheetp]
-[![](https://i.imgur.com/V5Xp74C.gif)][sheetp]
-[![](https://i.imgur.com/LW2qAcp.gif)][sheetp]
-[![](https://i.imgur.com/Kt1Uzyk.gif)][sheetp]
-[![](https://i.imgur.com/UGah41u.gif)][sheetp]
-[![](https://i.imgur.com/o9maK87.gif)][sheetp]
-[![](https://i.imgur.com/GQJRono.gif)][sheetp]
-[![](https://i.imgur.com/rou4VBX.gif)][sheetp]
-[![](https://i.imgur.com/D73ZUaf.gif)][sheetp]
-[![](https://i.imgur.com/sX2dCEb.gif)][sheetp]
+[![](https://i.imgur.com/ao04hOr.png)][sheetp]
 
-[![](https://i.imgur.com/IQTjjIb.png)][sheetp]
-[![](https://i.imgur.com/S4eCob2.png)][sheetp]
+[![](https://i.imgur.com/MjFYtAR.png)][sheetp]
+[![](https://i.imgur.com/SWWzK2n.png)][sheetp]
+[![](https://i.imgur.com/btVvbY3.png)][sheetp]
+[![](https://i.imgur.com/UCD1JKV.png)][sheetp]
+[![](https://i.imgur.com/nHP67ZI.png)][sheetp]
+[![](https://i.imgur.com/UNbGaHP.png)][sheetp]
+[![](https://i.imgur.com/gIo3FOJ.png)][sheetp]
+[![](https://i.imgur.com/hM9QE88.png)][sheetp]
+[![](https://i.imgur.com/hCqT5CW.png)][sheetp]
+[![](https://i.imgur.com/NJ33mp5.png)][sheetp]
+[![](https://i.imgur.com/WiBxzPv.png)][sheetp]
+[![](https://i.imgur.com/nhOMpIh.png)][sheetp]
+[![](https://i.imgur.com/EEvC3Ng.png)][sheetp]
+[![](https://i.imgur.com/SHTYwOn.png)][sheetp]
+[![](https://i.imgur.com/XkPS5GP.png)][sheetp]
+[![](https://i.imgur.com/zc6BQag.png)][sheetp]
 
 <br>
 <br>
@@ -102,27 +86,25 @@ $ ...
 ## References
 
 - [PageRank Algorithm, Mining massive Datasets (CS246), Stanford University](https://www.youtube.com/watch?v=ke9g8hB0MEo)
-- [CUDA by Example :: Jason Sanders, Edward Kandrot](https://www.slideshare.net/SubhajitSahu/cuda-by-example-notes)
-- [Managed memory vs cudaHostAlloc - TK1](https://forums.developer.nvidia.com/t/managed-memory-vs-cudahostalloc-tk1/34281)
-- [nvGraph pagerank example, EN605.617, JHU-EP-Intro2GPU](https://github.com/JHU-EP-Intro2GPU/EN605.617/blob/master/module9/nvgraph_examples/nvgraph_Pagerank.cpp)
-- [nvGraph pagerank example, CUDA Toolkit Documentation](https://docs.nvidia.com/cuda/archive/10.0/nvgraph/index.html#nvgraph-pagerank-example)
-- [nvGraph Library User's Guide](https://docs.nvidia.com/cuda/archive/10.1/pdf/nvGRAPH_Library.pdf)
-- [RAPIDS nvGraph NVIDIA graph library][nvGraph]
-- [SuiteSparse Matrix Collection]
+- [The PageRank Citation Ranking: Bringing Order to the Web; Larry Page et al. (1998)](https://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.38.5427)
+- [The University of Florida Sparse Matrix Collection; Timothy A. Davis et al. (2011)](https://doi.org/10.1145/2049662.2049663)
+- [What's the difference between "static" and "dynamic" schedule in OpenMP?](https://stackoverflow.com/a/10852852/1413259)
+- [OpenMP Dynamic vs Guided Scheduling](https://stackoverflow.com/a/43047074/1413259)
 
 <br>
 <br>
 
-[![](https://i.imgur.com/QIUy2ds.jpg)](https://www.youtube.com/watch?v=4EG2up-jcKM&t=12897s)
-[![DOI](https://zenodo.org/badge/371735420.svg)](https://zenodo.org/badge/latestdoi/371735420)
+
+[![](https://i.imgur.com/0XKZ240.jpg)](https://www.bleepingcomputer.com/review/gaming/minecraft-story-mode-is-fun-for-the-whole-family/)<br>
+
 
 [Prof. Dip Sankar Banerjee]: https://sites.google.com/site/dipsankarban/
-[Prof. Kishore Kothapalli]: https://cstar.iiit.ac.in/~kkishore/
-[SuiteSparse Matrix Collection]: https://suitesparse-collection-website.herokuapp.com
-["graphs"]: https://github.com/puzzlef/graphs
-[nvGraph]: https://github.com/rapidsai/nvgraph
-[pull]: https://github.com/puzzlef/pagerank-push-vs-pull
-[csr]: https://github.com/puzzlef/pagerank-class-vs-csr
-[charts]: https://photos.app.goo.gl/8uvRf81gpiBFNjFS6
-[sheets]: https://docs.google.com/spreadsheets/d/1Vqa9Kt1jU7Te9cB29HDZF8O_VfiwJOkNb1eu6mcUDrY/edit?usp=sharing
-[sheetp]: https://docs.google.com/spreadsheets/d/e/2PACX-1vQiG1SaS9NOXCGbJq-BM2rE5orbAeGU1F1SSqEhIrjs-TicLxm71x0MnUg7E2VU2oxLW4wIWNmGndNN/pubhtml
+[Prof. Kishore Kothapalli]: https://faculty.iiit.ac.in/~kkishore/
+[SuiteSparse Matrix Collection]: https://sparse.tamu.edu
+[OpenMP]: https://en.wikipedia.org/wiki/OpenMP
+[PageRank algorithm]: https://en.wikipedia.org/wiki/PageRank
+[link analysis]: https://en.wikipedia.org/wiki/Network_theory#Link_analysis
+[gist]: https://gist.github.com/wolfram77/c448cba0c0e371e25c3effa673ea82f2
+[charts]: https://imgur.com/a/SwaOufq
+[sheets]: https://docs.google.com/spreadsheets/d/1gG5hGrc3o8ztt_eBB7qddy6YLLmOKaDpuQUF3kNzGTc/edit?usp=sharing
+[sheetp]: https://docs.google.com/spreadsheets/d/e/2PACX-1vTIiozzISmsE7cm1kHOC-_woCGY6GYh3xcfjovjvfZxMna-Fs9t2vCJ_aq7JIF8-AYlSkhudW7zo3lu/pubhtml
