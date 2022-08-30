@@ -1,7 +1,7 @@
-# https://www.kaggle.com/wolfram77/puzzlef-pagerank-openmp-ordered-vs-unordered
+# https://www.kaggle.com/wolfram77/puzzlef-pagerank-ordered-openmp-adjust-tolerance
 import os
 from IPython.display import FileLink
-src="pagerank-openmp-ordered-vs-unordered"
+src="pagerank-ordered-openmp-adjust-tolerance"
 inp="/kaggle/input/graphs"
 out="{}.txt".format(src)
 !printf "" > "$out"

@@ -1,6 +1,8 @@
 Comparison of ordered vs unordered vertex processing in [OpenMP]-based
 [PageRank algorithm] for [link analysis].
 
+`TODO!`
+
 **Unordered PageRank** is the *standard* approach of PageRank computation (as
 described in the original paper by Larry Page et al. [(1)]), where *two*
 *different rank vectors* are maintained; one representing the *current* ranks of
@@ -91,7 +93,6 @@ $ ...
 
 
 [![](https://i.imgur.com/50yaKL7.jpg)](https://www.youtube.com/watch?v=g2tMcMQqSbA)<br>
-[![DOI](https://zenodo.org/badge/530082702.svg)](https://zenodo.org/badge/latestdoi/530082702)
 
 
 [(1)]: https://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.38.5427
