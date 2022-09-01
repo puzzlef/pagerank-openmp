@@ -105,6 +105,7 @@ $ ...
 
 
 [![](https://i.imgur.com/qp7YIhe.jpg)](https://www.youtube.com/watch?v=69-J2m_GyhI)<br>
+[![DOI](https://zenodo.org/badge/530790127.svg)](https://zenodo.org/badge/latestdoi/530790127)
 
 
 [(1)]: https://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.38.5427
