@@ -120,7 +120,7 @@ T pagerankTeleport(const vector<T>& r, const vector<K>& vdata, K N, T p) {
 // For rank calculation from in-edges.
 
 template <bool SLEEP=false, class K, class T>
-void pagerankCalculateW(vector<T>& a, const vector<T>& c, const vector<K>& vfrom, const vector<K>& efrom, K i, K n, T c0, PagerankThreadWork *work) {
+void pagerankCalculateW(vector<T>& a, const vector<T>& c, const vector<K>& vfrom, const vector<K>& efrom, K i, K n, T c0, float SP, int SD, PagerankThreadWork *work) {
   double sp = double(SP)/n;
   milliseconds sd(SD);
   for (K v=i; v<i+n; v++) {
@@ -130,7 +130,7 @@ void pagerankCalculateW(vector<T>& a, const vector<T>& c, const vector<K>& vfrom
 }
 
 template <bool SLEEP=false, class K, class T>
-void pagerankCalculateHelperW(vector<T>& a, const vector<T>& c, const vector<K>& vfrom, const vector<K>& efrom, K i, K n, T c0, PagerankThreadWork *work) {
+void pagerankCalculateHelperW(vector<T>& a, const vector<T>& c, const vector<K>& vfrom, const vector<K>& efrom, K i, K n, T c0, float SP, int SD, PagerankThreadWork *work) {
   PagerankThreadWork& me = *work;
   double sp = double(SP)/n;
   milliseconds sd(SD);
