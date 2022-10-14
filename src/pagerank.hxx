@@ -1,10 +1,15 @@
 #pragma once
+#include <atomic>
 #include <vector>
 #include <utility>
+#include <random>
 #include "_main.hxx"
 #include "components.hxx"
 
+using std::atomic;
 using std::vector;
+using std::random_device;
+using std::default_random_engine;
 using std::move;
 
 
@@ -85,4 +90,34 @@ auto blockgraphTransposeD(const G& b, const PagerankData<G> *D) {
 template <class G, class H>
 auto componentsD(const G& x, const H& xt, const PagerankData<G> *D) {
   return D? D->components : components(x, xt);
+}
+
+
+
+
+// PAGERANK-THREAD-WORK
+// --------------------
+
+struct PagerankThreadWork {
+  random_device dev;          // used for random sleeps
+  default_random_engine rnd;  // used for random sleeps
+  atomic<size_t> begin;       // vertex being processed
+  atomic<size_t> end;         // 1 + last vertex to be processed
+  atomic<bool>   stolen;      // indicates if a thread has stolen work
+
+  PagerankThreadWork(size_t begin=0, size_t end=0) :
+  dev(), rnd(dev), begin(begin), end(end) {}
+
+  inline size_t size() const { return end>begin? end-begin : 0; }
+  inline bool empty()  const { return size() == 0; }
+
+  inline void updateRange(size_t _begin, size_t _end) { begin = _begin; end = _end; }
+};
+
+
+auto pagerankThreadWorks(int n) {
+  vector<PagerankThreadWork*> a;
+  for (int i=0; i<n; ++i)
+    a.push_back(new PagerankThreadWork());
+  return a;
 }
