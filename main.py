@@ -1,7 +1,7 @@
-# https://www.kaggle.com/wolfram77/puzzlef-pagerank-barrierfree-with-sleep
+# https://www.kaggle.com/wolfram77/puzzlef-pagerank-helper-openmp-with-sleep
 import os
 from IPython.display import FileLink
-src="pagerank-barrierfree-with-sleep"
+src="pagerank-helper-openmp-with-sleep"
 inp="/kaggle/input/graphs"
 out="{}.txt".format(src)
 !printf "" > "$out"

@@ -1,7 +1,6 @@
 #pragma once
 #include <vector>
 #include <algorithm>
-#include <chrono>
 #include <omp.h>
 #include "_main.hxx"
 #include "vertices.hxx"
@@ -11,7 +10,6 @@
 #include "pagerankSeq.hxx"
 
 using std::vector;
-using std::chrono::milliseconds;
 using std::swap;
 
 
@@ -55,33 +53,14 @@ T pagerankTeleportOmp(const vector<T>& r, const vector<K>& vdata, K N, T p) {
 // ------------------
 // For rank calculation from in-edges.
 
-template <class K, class T, class R>
-void pagerankCalculateOmpW(vector<T>& a, const vector<T>& c, const vector<K>& vfrom, const vector<K>& efrom, K i, K n, T c0, float SP, int SD, vector<R*>& rnds) {
-  if (n<SIZE_MIN_OMPM) { pagerankCalculateW(a, c, vfrom, efrom, i, n, c0, SP, SD, rnds[0]); return; }
-  double sp = double(SP)/n;
-  milliseconds sd(SD);
+template <class K, class T, class FS>
+void pagerankCalculateOmpW(vector<T>& a, const vector<T>& c, const vector<K>& vfrom, const vector<K>& efrom, K i, K n, T c0, FS fsleep) {
+  if (n<SIZE_MIN_OMPM) { pagerankCalculateW(a, c, vfrom, efrom, i, n, c0, fsleep); return; }
   #pragma omp parallel for schedule(dynamic, 2048)
   for (K v=i; v<i+n; v++) {
     int t = omp_get_thread_num();
-    randomSleepFor(sd, sp, *(rnds[t]));
+    fsleep(t);
     a[v] = c0 + sumValuesAt(c, sliceIterable(efrom, vfrom[v], vfrom[v+1]));
-  }
-}
-
-template <class K, class T, class R>
-void pagerankCalculateOrderedOmpU(vector<T>& e, vector<T>& r, const vector<T>& f, const vector<K>& vfrom, const vector<K>& efrom, K i, K n, T c0, float SP, int SD, vector<R*>& rnds) {
-  if (n<SIZE_MIN_OMPM) { pagerankCalculateOrderedU(e, r, f, vfrom, efrom, i, n, c0, SP, SD, rnds[0]); return; }
-  double sp = double(SP)/n;
-  milliseconds sd(SD);
-  #pragma omp parallel for schedule(dynamic, 2048)
-  for (K v=i; v<i+n; v++) {
-    int t = omp_get_thread_num();
-    randomSleepFor(sd, sp, *(rnds[t]));
-    T a = c0;
-    for (K u : sliceIterable(efrom, vfrom[v], vfrom[v+1]))
-      a += f[u] * r[u];
-    e[v] = a - r[v];
-    r[v] = a;
   }
 }
 
@@ -98,15 +77,6 @@ T pagerankErrorOmp(const vector<T>& x, const vector<T>& y, K i, K N, int EF) {
     case 1:  return l1NormOmp(x, y, i, N);
     case 2:  return l2NormOmp(x, y, i, N);
     default: return liNormOmp(x, y, i, N);
-  }
-}
-
-template <class K, class T>
-T pagerankErrorOmp(const vector<T>& x, K i, K N, int EF) {
-  switch (EF) {
-    case 1:  return l1NormOmp(x, i, N);
-    case 2:  return l2NormOmp(x, i, N);
-    default: return liNormOmp(x, i, N);
   }
 }
 
@@ -136,8 +106,8 @@ PagerankResult<T> pagerankOmp(const H& xt, const J& ks, size_t i, const M& ns, F
   float t = measureDuration([&]() {
     if (q) copyValuesOmpW(r, qc);  // copy old ranks (qc), if given
     else fillValueOmpU(r, T(1)/N);
-    pagerankFactorOmpW(f, vdata, K(0), N, p); multiplyValuesOmpW(c, r, f, 0, N);                // calculate factors (f) and contributions (c)
-    l = fl(a, r, c, f, vfrom, efrom, vdata, rnds, K(i), ns, N, p, E, L, EF, SP, SD, K(), K());  // calculate ranks of vertices
+    pagerankFactorOmpW(f, vdata, K(0), N, p); multiplyValuesOmpW(c, r, f, 0, N);      // calculate factors (f) and contributions (c)
+    l = fl(a, r, c, f, vfrom, efrom, vdata, rnds, K(i), ns, N, p, E, L, EF, SP, SD);  // calculate ranks of vertices
   }, o.repeat);
   return {decompressContainer(xt, r, ks), l, t};
 }

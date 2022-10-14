@@ -1,7 +1,6 @@
 #pragma once
 #include <vector>
 #include <algorithm>
-#include <chrono>
 #include "_main.hxx"
 #include "vertices.hxx"
 #include "edges.hxx"
@@ -11,7 +10,6 @@
 #include "pagerank.hxx"
 
 using std::vector;
-using std::chrono::milliseconds;
 using std::swap;
 
 
@@ -119,27 +117,11 @@ T pagerankTeleport(const vector<T>& r, const vector<K>& vdata, K N, T p) {
 // ------------------
 // For rank calculation from in-edges.
 
-template <class K, class T, class R>
-void pagerankCalculateW(vector<T>& a, const vector<T>& c, const vector<K>& vfrom, const vector<K>& efrom, K i, K n, T c0, float SP, int SD, R* rnd) {
-  double sp = double(SP)/n;
-  milliseconds sd(SD);
+template <class K, class T, class FS>
+void pagerankCalculateW(vector<T>& a, const vector<T>& c, const vector<K>& vfrom, const vector<K>& efrom, K i, K n, T c0, FS fsleep) {
   for (K v=i; v<i+n; v++) {
-    randomSleepFor(sd, sp, *rnd);
+    fsleep(0);
     a[v] = c0 + sumValuesAt(c, sliceIterable(efrom, vfrom[v], vfrom[v+1]));
-  }
-}
-
-template <class K, class T, class R>
-void pagerankCalculateOrderedU(vector<T>& e, vector<T>& r, const vector<T>& f, const vector<K>& vfrom, const vector<K>& efrom, K i, K n, T c0, float SP, int SD, R* rnd) {
-  double sp = double(SP)/n;
-  milliseconds sd(SD);
-  for (K v=i; v<i+n; v++) {
-    randomSleepFor(sd, sp, *rnd);
-    T a = c0;
-    for (K u : sliceIterable(efrom, vfrom[v], vfrom[v+1]))
-      a += f[u] * r[u];
-    e[v] = a - r[v];
-    r[v] = a;
   }
 }
 
@@ -156,15 +138,6 @@ T pagerankError(const vector<T>& x, const vector<T>& y, K i, K N, int EF) {
     case 1:  return l1Norm(x, y, i, N);
     case 2:  return l2Norm(x, y, i, N);
     default: return liNorm(x, y, i, N);
-  }
-}
-
-template <class K, class T>
-T pagerankError(const vector<T>& x, K i, K N, int EF) {
-  switch (EF) {
-    case 1:  return l1Norm(x, i, N);
-    case 2:  return l2Norm(x, i, N);
-    default: return liNorm(x, i, N);
   }
 }
 
@@ -194,8 +167,8 @@ PagerankResult<T> pagerankSeq(const H& xt, const J& ks, size_t i, const M& ns, F
   float t = measureDuration([&]() {
     if (q) copyValuesW(r, qc);   // copy old ranks (qc), if given
     else fillValueU(r, T(1)/N);
-    pagerankFactorW(f, vdata, K(0), N, p); multiplyValuesW(c, r, f, 0, N);                      // calculate factors (f) and contributions (c)
-    l = fl(a, r, c, f, vfrom, efrom, vdata, rnds[0], K(i), ns, N, p, E, L, EF, SP, SD, K(), K());  // calculate ranks of vertices
+    pagerankFactorW(f, vdata, K(0), N, p); multiplyValuesW(c, r, f, 0, N);               // calculate factors (f) and contributions (c)
+    l = fl(a, r, c, f, vfrom, efrom, vdata, rnds[0], K(i), ns, N, p, E, L, EF, SP, SD);  // calculate ranks of vertices
   }, o.repeat);
   return {decompressContainer(xt, r, ks), l, t};
 }
