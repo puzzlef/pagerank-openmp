@@ -110,11 +110,12 @@ struct PagerankThreadWork {
 
   inline size_t size() const { return end -  begin; }
   inline bool empty()  const { return end <= begin; }
+  inline void clear() { begin = 0; end = 0; stolen = false; }
   inline void updateRange(size_t _begin, size_t _end) { begin = _begin; end = _end; }
 };
 
 
-auto pagerankThreadWorks(int n) {
+inline auto pagerankThreadWorks(int n) {
   vector<PagerankThreadWork*> a;
   for (int i=0; i<n; ++i)
     a.push_back(new PagerankThreadWork());

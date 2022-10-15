@@ -178,5 +178,6 @@ PagerankResult<T> pagerankSeq(const H& xt, const J& ks, size_t i, const M& ns, F
     pagerankFactorW(f, vdata, K(0), N, p); multiplyValuesW(c, r, f, 0, N);                // calculate factors (f) and contributions (c)
     l = fl(a, r, c, f, vfrom, efrom, vdata, works[0], K(i), ns, N, p, E, L, EF, SP, SD);  // calculate ranks of vertices
   }, o.repeat);
+  forEach(works, [](PagerankThreadWork *w) { delete w; });
   return {decompressContainer(xt, r, ks), l, t};
 }
