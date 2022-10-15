@@ -53,7 +53,7 @@ void runPagerank(const G& x, const H& xt, int repeat) {
 
 int main(int argc, char **argv) {
   char *file = argv[1];
-  int repeat = argc>2? stoi(argv[2]) : 5;
+  int repeat = argc>2? stoi(argv[2]) : 1;
   printf("Loading graph %s ...\n", file);
   OutDiGraph<int64_t> x;
   readMtxW(x, file); println(x);

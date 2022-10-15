@@ -119,27 +119,18 @@ T pagerankTeleport(const vector<T>& r, const vector<K>& vdata, K N, T p) {
 // ------------------
 // For rank calculation from in-edges.
 
+template <bool SLEEP=false, class K, class T, class R>
+inline void pagerankCalculateRankW(vector<T>& a, const vector<T>& c, const vector<K>& vfrom, const vector<K>& efrom, K v, T c0, double sp, milliseconds sd, R& rnd) {
+  if (SLEEP) randomSleepFor(sd, sp, rnd);
+  a[v] = c0 + sumValuesAt(c, sliceIterable(efrom, vfrom[v], vfrom[v+1]));
+}
+
 template <bool SLEEP=false, class K, class T>
 void pagerankCalculateW(vector<T>& a, const vector<T>& c, const vector<K>& vfrom, const vector<K>& efrom, K i, K n, T c0, float SP, int SD, PagerankThreadWork *work) {
   double sp = double(SP)/n;
   milliseconds sd(SD);
-  for (K v=i; v<i+n; v++) {
-    if (SLEEP) randomSleepFor(sd, sp, work->rnd);
-    a[v] = c0 + sumValuesAt(c, sliceIterable(efrom, vfrom[v], vfrom[v+1]));
-  }
-}
-
-template <bool SLEEP=false, class K, class T>
-void pagerankCalculateHelperW(vector<T>& a, const vector<T>& c, const vector<K>& vfrom, const vector<K>& efrom, K i, K n, T c0, float SP, int SD, PagerankThreadWork *work) {
-  PagerankThreadWork& me = *work;
-  double sp = double(SP)/n;
-  milliseconds sd(SD);
-  for (K v=i; v<i+n; v++) {
-    if (me.stolen && me.empty()) break;
-    if (SLEEP) randomSleepFor(sd, sp, me.rnd);
-    a[v] = c0 + sumValuesAt(c, sliceIterable(efrom, vfrom[v], vfrom[v+1]));
-    ++me.begin;  // work done on current vertex
-  }
+  for (K v=i; v<i+n; v++)
+    pagerankCalculateRankW<SLEEP>(a, c, vfrom, efrom, v, c0, sp, sd, work->rnd);
 }
 
 

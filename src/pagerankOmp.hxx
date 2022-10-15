@@ -13,6 +13,7 @@
 using std::vector;
 using std::chrono::milliseconds;
 using std::swap;
+using std::min;
 
 
 
@@ -90,67 +91,57 @@ inline int pagerankBusyThread(vector<PagerankThreadWork*>& works, R& rnd) {
 }
 
 template <bool ALL=false>
-inline bool pagerankStealWorkRange(PagerankThreadWork& me, PagerankThreadWork& victim, size_t begin, size_t end) {
-  if (begin>=end) return false;
-  if (!victim.end.compare_exchange_strong(end, ALL? victim.begin.load() : begin)) return false;
+inline bool pagerankStealWork(PagerankThreadWork& me, PagerankThreadWork& victim, size_t begin, size_t end) {
+  if (!victim.end.compare_exchange_weak(end, ALL? size_t(victim.begin) : begin)) return false;
   victim.stolen = true;
   me.updateRange(begin, end);
   return true;
 }
 
 template <bool ALL=false>
-inline bool pagerankStealWorkFrom(PagerankThreadWork& me, PagerankThreadWork& victim, size_t begin) {
-  return pagerankStealWorkRange<ALL>(me, victim, begin, victim.end);
-}
-
-template <bool ALL=false>
 inline bool pagerankStealWorkSize(PagerankThreadWork& me, PagerankThreadWork& victim, size_t n) {
-  size_t end = victim.end, begin = end - n;
-  return pagerankStealWorkRange<ALL>(me, victim, begin, end);
+  size_t begin = victim.begin, end = victim.end;
+  return begin+n<end && pagerankStealWork<ALL>(me, victim, end-n, end);
 }
 
-inline bool pagerankIsThreadStuck(PagerankThreadWork& victim, size_t oldBegin) {
-  return !victim.empty() && victim.begin==oldBegin;
+template <bool ALL=false, class F>
+inline bool pagerankStealWorkIfSlow(PagerankThreadWork& me, PagerankThreadWork& victim, size_t n, F fn) {
+  size_t begin = victim.begin, end = victim.end; fn(begin);
+  return !victim.empty() && victim.begin!=begin && pagerankStealWork<ALL>(me, victim, begin+n, end);
 }
 
 
 template <bool SLEEP=false, class K, class T>
 void pagerankCalculateHelperOmpW(vector<T>& a, const vector<T>& c, const vector<K>& vfrom, const vector<K>& efrom, K i, K n, T c0, float SP, int SD, vector<PagerankThreadWork*>& works) {
   const int chunkSize = 2048;
-  const int stealSize = chunkSize/2;
+  const int stealSize = chunkSize/4;
   double sp = double(SP)/n;
   milliseconds sd(SD);
   #pragma omp parallel
   {
     int t = omp_get_thread_num();
-    PagerankThreadWork& me = *(works[t]);
+    PagerankThreadWork& me = *works[t];
     // 1. Perform work assigned to me.
     #pragma omp for schedule(dynamic, 2048) nowait
-    for (K v=i; v<i+n; ++v, ++me.begin) {
-      if (me.stolen) break;
-      if (me.empty()) me.updateRange(v, v+chunkSize);
-      if (SLEEP) randomSleepFor(sd, sp, me.rnd);
-      a[v] = c0 + sumValuesAt(c, sliceIterable(efrom, vfrom[v], vfrom[v+1]));
+    for (K v=i; v<i+n; ++v) {
+      if (me.stolen)  continue;
+      if (me.empty()) me.updateRange(v, min(v+chunkSize, i+n));
+      pagerankCalculateRankW<SLEEP>(a, c, vfrom, efrom, v, c0, sp, sd, me.rnd);
+      ++me.begin;
     }
-    // 2. Help other threads (victims).
     while (true) {
-      if ()
-    }
-    for (;;) {
+      // 2. Perform remaining/stolen work.
+      while (!me.empty())
+        pagerankCalculateRankW<SLEEP>(a, c, vfrom, efrom, K(me.begin++), c0, sp, sd, me.rnd);
+      // 3. Find a busy thread (victim), who has work.
       int b = pagerankBusyThread(works, me.rnd);
-      if (b<0) break;  // all threads free!
-      PagerankThreadWork& victim = *(works[b]);
-      if (victim.size() > stealSize) {
-        if (!pagerankStealWorkSize(me, victim, stealSize)) continue;
-        pagerankCalculateHelperW<SLEEP>(a, c, vfrom, efrom, K(me.begin.load()), K(me.size()), c0, SP, SD, works[t]);
-      }
-      else {
-        size_t begin = victim.begin;
-        pagerankCalculateW(a, c, vfrom, efrom, K(begin), K(1), c0, SP, SD, works[t]);
-        if (!pagerankIsThreadStuck(victim, begin)) continue;
-        if (!pagerankStealWorkFrom<true>(me, victim, begin+1)) continue;
-        pagerankCalculateHelperW<SLEEP>(a, c, vfrom, efrom, K(me.begin.load()), K(me.size()), c0, SP, SD, works[t]);
-      }
+      if (b<0) break;
+      // 4. Steal work from victim.
+      PagerankThreadWork& victim = *works[b];
+      if (pagerankStealWorkSize(me, victim, stealSize)) continue;
+      pagerankStealWorkIfSlow<true>(me, victim, 1, [&](size_t begin) {  // or if stuck
+        pagerankCalculateRankW(a, c, vfrom, efrom, K(begin), c0, sp, sd, me.rnd);
+      });
     }
   }
 }

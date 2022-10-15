@@ -106,11 +106,10 @@ struct PagerankThreadWork {
   atomic<bool>   stolen;      // indicates if a thread has stolen work
 
   PagerankThreadWork(size_t begin=0, size_t end=0) :
-  dev(), rnd(dev()), begin(begin), end(end) {}
+  dev(), rnd(dev()), begin(begin), end(end), stolen(false) {}
 
-  inline size_t size() const { return end>begin? end-begin : 0; }
-  inline bool empty()  const { return size() == 0; }
-
+  inline size_t size() const { return end -  begin; }
+  inline bool empty()  const { return end <= begin; }
   inline void updateRange(size_t _begin, size_t _end) { begin = _begin; end = _end; }
 };
 
