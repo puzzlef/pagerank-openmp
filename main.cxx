@@ -32,8 +32,8 @@ void runPagerank(const G& x, const H& xt, int repeat) {
   T damping   = 0.85f;
   T tolerance = 1e-10f;
 
-  for (int sleepDurationMs=1, i=0; sleepDurationMs<=1000; sleepDurationMs*=++i&1? 5:2) {
-    for (float sleepProbability=0.0f; sleepProbability<1.01f; sleepProbability+=0.1f) {
+  for (int sleepDurationMs=1; sleepDurationMs<=100000; sleepDurationMs*=10) {
+    for (float sleepProbability=0.0f; sleepProbability<1.01f; sleepProbability+=0.2f) {
       PagerankOptions<T> p = {1,      false, sleepProbability, sleepDurationMs, damping, Li, tolerance};
       PagerankOptions<T> o = {repeat, false, sleepProbability, sleepDurationMs, damping, Li, tolerance};
       // Find pagerank using a single thread for reference (unordered, no dead ends).
