@@ -103,21 +103,23 @@ template <bool ALL=false>
 inline bool pagerankStealWorkSize(PagerankThreadWork& me, PagerankThreadWork& victim, size_t n) {
   size_t begin = victim.begin, end = victim.end;
   if (begin+n>=end) return false;
-  pagerankStealWork<ALL>(me, victim, end-n, end);
+  pagerankStealWork<ALL>(me, victim, min(end-n, end), end);
   return true;
 }
 
 template <bool ALL=false, class F>
 inline bool pagerankStealWorkIfSlow(PagerankThreadWork& me, PagerankThreadWork& victim, size_t n, F fn) {
-  size_t begin = victim.begin, end = victim.end; fn(begin);
+  size_t begin = victim.begin, end = victim.end;
+  if (begin==end) return false;
+  fn (begin);
   if (victim.empty() || victim.begin!=begin) return false;
-  pagerankStealWork<ALL>(me, victim, begin+n, end);
+  pagerankStealWork<ALL>(me, victim, min(begin+n, end), end);
   return true;
 }
 
 
 template <bool SLEEP=false, class K, class T>
-void pagerankCalculateHelperOmpW(vector<T>& a, const vector<T>& c, const vector<K>& vfrom, const vector<K>& efrom, K i, K n, T c0, float SP, int SD, vector<PagerankThreadWork*>& works, int l=0) {
+void pagerankCalculateHelperOmpW(vector<T>& a, const vector<T>& c, const vector<K>& vfrom, const vector<K>& efrom, K i, K n, T c0, float SP, int SD, vector<PagerankThreadWork*>& works) {
   const int chunkSize = 2048;
   const int stealSize = chunkSize/4;
   double sp = double(SP)/n;
