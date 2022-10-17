@@ -43,11 +43,11 @@ void runPagerank(const G& x, const H& xt, int repeat) {
       auto e1 = l1NormOmp(a1.ranks, a0.ranks);
       printf("[%09.3f ms; %03d iters.] [%.4e err.] pagerankOmp                  {sleep_prob: %.1f, sleep_dur: %04d ms}\n", a1.time, a1.iterations, e1, sleepProbability, sleepDurationMs);
       // Find pagerank accelerated with OpenMP (no dead ends, sleep, no help).
-      auto a2 = pagerankMonolithicBarrierfreeOmp<false, true, false>(x, xt, init, o);
+      auto a2 = pagerankMonolithicBarrierfreeOmp<false, true, false, true>(x, xt, init, o);
       auto e2 = l1NormOmp(a2.ranks, a0.ranks);
       printf("[%09.3f ms; %03d iters.] [%.4e err.] pagerankBarrierfreeOmp       {sleep_prob: %.1f, sleep_dur: %04d ms}\n", a2.time, a2.iterations, e2, sleepProbability, sleepDurationMs);
       // Find pagerank accelerated with OpenMP (no dead ends, sleep, with help/work-stealing).
-      auto a3 = pagerankMonolithicBarrierfreeOmp<false, true, true>(x, xt, init, o);
+      auto a3 = pagerankMonolithicBarrierfreeOmp<false, true, true, true>(x, xt, init, o);
       auto e3 = l1NormOmp(a3.ranks, a0.ranks);
       printf("[%09.3f ms; %03d iters.] [%.4e err.] pagerankHelperBarrierfreeOmp {sleep_prob: %.1f, sleep_dur: %04d ms}\n", a3.time, a3.iterations, e3, sleepProbability, sleepDurationMs);
     }
@@ -57,7 +57,7 @@ void runPagerank(const G& x, const H& xt, int repeat) {
 
 int main(int argc, char **argv) {
   char *file = argv[1];
-  int repeat = argc>2? stoi(argv[2]) : 5;
+  int repeat = argc>2? stoi(argv[2]) : 1;
   printf("Loading graph %s ...\n", file);
   OutDiGraph<int64_t> x;
   readMtxW(x, file); println(x);

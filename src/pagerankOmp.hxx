@@ -106,12 +106,13 @@ inline bool pagerankIsChunkStart(K off, int chunkSize=2048) {
   return off && (chunkSize-1) == 0;
 }
 
-template <class R>
-inline int pagerankBusyThread(vector<PagerankThreadWork*>& works, R& rnd) {
+template <bool ITER=false, class R>
+inline int pagerankBusyThread(vector<PagerankThreadWork*>& works, R& rnd, int l=0) {
   int N = works.size();
   int p = randomPrime(N+1, 10*N, rnd);
   for (int i=0, q=0; i<N; ++i) {
     q = (q + p) % N;
+    if (ITER && works[q]->iteration > l) continue;
     if (!works[q]->empty()) return q;
   }
   return -1;
@@ -152,7 +153,7 @@ void pagerankCalculateHelperOmpW(vector<T>& a, const vector<T>& c, const vector<
   milliseconds sd(SD);
   // 0. Reset thread works.
   for (int i=0; i<works.size(); ++i)
-    works[i]->clear();
+    works[i]->clearRange();
   #pragma omp parallel
   {
     int t = omp_get_thread_num();
@@ -194,7 +195,8 @@ void pagerankCalculateHelperBarrierfreeOmpW(vector<T>& a, const vector<T>& r, co
   // 0. Reset thread works.
   int t = omp_get_thread_num();
   PagerankThreadWork& me = *works[t];
-  me.clear();
+  int l = me.iteration;
+  me.clearRange();
   // 1. Perform work assigned to me.
   #pragma omp for schedule(dynamic, 2048) nowait
   for (K v=i; v<i+n; ++v) {
@@ -211,17 +213,19 @@ void pagerankCalculateHelperBarrierfreeOmpW(vector<T>& a, const vector<T>& r, co
       err = max(err, e);  // li-norm
     }
     // 3. Find a busy thread (victim), who has work.
-    int b = pagerankBusyThread(works, me.rnd);
+    int b = pagerankBusyThread<true>(works, me.rnd, l);
     if (b<0) break;
     // 4. Steal work from victim.
     PagerankThreadWork& victim = *works[b];
     if (pagerankStealWorkSize(me, victim, stealSize)) continue;
     pagerankStealWorkIfSlow<true>(me, victim, 1, [&](size_t begin) {  // or if stuck
-      pagerankCalculateRankW(a, c, vfrom, efrom, K(begin), c0, sp, sd, me.rnd);
+      T e = pagerankCalculateRankDeltaW(a, r, f, vfrom, efrom, K(begin), c0, sp, sd, me.rnd);
+      err = max(err, e);  // li-norm
       sleep_for(microseconds(4));
     });
   }
   me.error = err;
+  ++me.iteration;
 }
 
 

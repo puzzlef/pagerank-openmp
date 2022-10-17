@@ -29,7 +29,7 @@ struct PagerankOptions {
   T     tolerance;
   int   maxIterations;
 
-  PagerankOptions(int repeat=1, bool splitComponents=false, float sleepProbability=0.0f, int sleepDurationMs=0, T damping=0.85, int toleranceNorm=1, T tolerance=1e-6, int maxIterations=500) :
+  PagerankOptions(int repeat=1, bool splitComponents=false, float sleepProbability=0.0f, int sleepDurationMs=0, T damping=0.85, int toleranceNorm=1, T tolerance=1e-6, int maxIterations=100) :
   repeat(repeat), splitComponents(splitComponents), sleepProbability(sleepProbability), sleepDurationMs(sleepDurationMs), damping(damping), toleranceNorm(toleranceNorm), tolerance(tolerance), maxIterations(maxIterations) {}
 };
 
@@ -101,18 +101,20 @@ auto componentsD(const G& x, const H& xt, const PagerankData<G> *D) {
 struct PagerankThreadWork {
   random_device dev;          // used for random sleeps
   default_random_engine rnd;  // used for random sleeps
-  atomic<double> error;       // rank error wrt previous iteration for this thread
-  atomic<bool>   stolen;      // indicates if a thread has stolen work
-  atomic<size_t> begin;       // vertex being processed
-  atomic<size_t> end;         // 1 + last vertex to be processed
+  volatile int    iteration;  // current iteration
+  volatile double error;      // rank error wrt previous iteration for this thread
+  volatile bool   stolen;     // indicates if a thread has stolen work
+  atomic<size_t>  begin;      // vertex being processed
+  atomic<size_t>  end;        // 1 + last vertex to be processed
 
   PagerankThreadWork(size_t begin=0, size_t end=0) :
-  dev(), rnd(dev()), error(1), stolen(false), begin(begin), end(end) {}
+  dev(), rnd(dev()), iteration(0), error(1), stolen(false), begin(begin), end(end) {}
 
   inline size_t size() const { return end -  begin; }
   inline bool empty()  const { return end <= begin; }
-  inline void clear() { stolen = false; begin = 0; end = 0; }
   inline void updateRange(size_t _begin, size_t _end) { begin = _begin; end = _end; }
+  inline void clearRange() { stolen = false; begin = 0; end = 0; }
+  inline void clear()      { iteration = 0;  error = 1; clearRange(); }
 };
 
 

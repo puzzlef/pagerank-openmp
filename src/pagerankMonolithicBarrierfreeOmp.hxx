@@ -20,21 +20,26 @@ using std::swap;
 template <bool DEAD=false, bool SLEEP=false, bool HELP=false, bool ONE=false, class K, class T>
 int pagerankMonolithicBarrierfreeOmpLoopU(vector<T>& a, vector<T>& r, vector<T>& c, const vector<T>& f, const vector<K>& vfrom, const vector<K>& efrom, const vector<K>& vdata, vector<PagerankThreadWork*>& works, K i, K n, K N, T p, T E, int L, int EF, float SP, int SD) {
   atomic<int> ls = 0;
+  // 0. Reset thread works.
+  for (int t=0; t<works.size(); ++t)
+    works[t]->clear();
+  // 1. Perform iterations.
   #pragma omp parallel
   {
     int l = 0;
-    vector<T> *rp = &r, *ap = ONE? &r : &a;
+    vector<T> *rp = &r;
+    vector<T> *ap = ONE? &r : &a;
     while (l<L) {
       T c0 = DEAD? pagerankTeleportBarrierfreeOmp(*rp, vdata, N, p) : (1-p)/N;
       if (HELP) pagerankCalculateHelperBarrierfreeOmpW<SLEEP>(*ap, *rp, f, vfrom, efrom, i, n, c0, SP, SD, works);
-      else pagerankCalculateBarrierfreeOmpW<SLEEP>(*ap, *rp, f, vfrom, efrom, i, n, c0, SP, SD, works);  // update ranks of vertices
+      else      pagerankCalculateBarrierfreeOmpW<SLEEP>      (*ap, *rp, f, vfrom, efrom, i, n, c0, SP, SD, works);  // update ranks of vertices
       T el = pagerankErrorBarrierfreeOmp(works);  // compare previous and current ranks
       swap(ap, rp); ++l;                          // final ranks in (r)
       if (el<E) break;                            // check tolerance
     }
     if (l>ls) ls = l;
   }
-  if (ls & 1 == 1) swap(a, r);
+  if (!ONE && (ls & 1)==1) swap(a, r);
   return ls;
 }
 

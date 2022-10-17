@@ -120,7 +120,7 @@ T pagerankTeleport(const vector<T>& r, const vector<K>& vdata, K N, T p) {
 // For rank calculation from in-edges.
 
 template <bool SLEEP=false, class K, class T, class R>
-inline void pagerankCalculateRankDeltaW(vector<T>& a, const vector<T>& r, const vector<T>& f, const vector<K>& vfrom, const vector<K>& efrom, K v, T c0, double sp, milliseconds sd, R& rnd) {
+inline T pagerankCalculateRankDeltaW(vector<T>& a, const vector<T>& r, const vector<T>& f, const vector<K>& vfrom, const vector<K>& efrom, K v, T c0, double sp, milliseconds sd, R& rnd) {
   if (SLEEP) randomSleepFor(sd, sp, rnd);
   T rv = r[v], av = c0;
   for (K i=vfrom[v], I=vfrom[v+1]; i<I; ++i) {
