@@ -120,10 +120,23 @@ T pagerankTeleport(const vector<T>& r, const vector<K>& vdata, K N, T p) {
 // For rank calculation from in-edges.
 
 template <bool SLEEP=false, class K, class T, class R>
+inline void pagerankCalculateRankDeltaW(vector<T>& a, const vector<T>& r, const vector<T>& f, const vector<K>& vfrom, const vector<K>& efrom, K v, T c0, double sp, milliseconds sd, R& rnd) {
+  if (SLEEP) randomSleepFor(sd, sp, rnd);
+  T rv = r[v], av = c0;
+  for (K i=vfrom[v], I=vfrom[v+1]; i<I; ++i) {
+    K u = efrom[i];
+    av += r[u]*f[u];
+  }
+  a[v] = av;
+  return av - rv;
+}
+
+template <bool SLEEP=false, class K, class T, class R>
 inline void pagerankCalculateRankW(vector<T>& a, const vector<T>& c, const vector<K>& vfrom, const vector<K>& efrom, K v, T c0, double sp, milliseconds sd, R& rnd) {
   if (SLEEP) randomSleepFor(sd, sp, rnd);
   a[v] = c0 + sumValuesAt(c, sliceIterable(efrom, vfrom[v], vfrom[v+1]));
 }
+
 
 template <bool SLEEP=false, class K, class T>
 void pagerankCalculateW(vector<T>& a, const vector<T>& c, const vector<K>& vfrom, const vector<K>& efrom, K i, K n, T c0, float SP, int SD, PagerankThreadWork *work) {

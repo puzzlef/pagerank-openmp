@@ -101,16 +101,17 @@ auto componentsD(const G& x, const H& xt, const PagerankData<G> *D) {
 struct PagerankThreadWork {
   random_device dev;          // used for random sleeps
   default_random_engine rnd;  // used for random sleeps
+  atomic<double> error;       // rank error wrt previous iteration for this thread
+  atomic<bool>   stolen;      // indicates if a thread has stolen work
   atomic<size_t> begin;       // vertex being processed
   atomic<size_t> end;         // 1 + last vertex to be processed
-  atomic<bool>   stolen;      // indicates if a thread has stolen work
 
   PagerankThreadWork(size_t begin=0, size_t end=0) :
-  dev(), rnd(dev()), begin(begin), end(end), stolen(false) {}
+  dev(), rnd(dev()), error(1), stolen(false), begin(begin), end(end) {}
 
   inline size_t size() const { return end -  begin; }
   inline bool empty()  const { return end <= begin; }
-  inline void clear() { begin = 0; end = 0; stolen = false; }
+  inline void clear() { stolen = false; begin = 0; end = 0; }
   inline void updateRange(size_t _begin, size_t _end) { begin = _begin; end = _end; }
 };
 

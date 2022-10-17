@@ -15,6 +15,7 @@ using std::chrono::microseconds;
 using std::this_thread::sleep_for;
 using std::swap;
 using std::min;
+using std::max;
 
 
 
@@ -51,6 +52,16 @@ T pagerankTeleportOmp(const vector<T>& r, const vector<K>& vdata, K N, T p) {
 }
 
 
+template <class K, class T>
+T pagerankTeleportBarrierfreeOmp(const vector<T>& r, const vector<K>& vdata, K N, T p) {
+  T a = (1-p)/N;
+  #pragma omp for schedule(auto) reduction(+:a)
+  for (K u=0; u<N; u++)
+    if (vdata[u] == 0) a += p*r[u]/N;
+  return a;
+}
+
+
 
 
 // PAGERANK-CALCULATE
@@ -64,9 +75,24 @@ void pagerankCalculateOmpW(vector<T>& a, const vector<T>& c, const vector<K>& vf
   #pragma omp parallel for schedule(dynamic, 2048)
   for (K v=i; v<i+n; v++) {
     int t = omp_get_thread_num();
-    if (SLEEP) randomSleepFor(sd, sp, works[t]->rnd);
-    a[v] = c0 + sumValuesAt(c, sliceIterable(efrom, vfrom[v], vfrom[v+1]));
+    pagerankCalculateRankW<SLEEP>(a, c, vfrom, efrom, v, c0, sp, sd, works[t]->rnd);
   }
+}
+
+
+template <bool SLEEP=false, class K, class T>
+void pagerankCalculateBarrierfreeOmpW(vector<T>& a, const vector<T>& r, const vector<T>& f, const vector<K>& vfrom, const vector<K>& efrom, K i, K n, T c0, float SP, int SD, vector<PagerankThreadWork*>& works) {
+  double sp = double(SP)/n;
+  milliseconds sd(SD);
+  double err = 0;
+  int t = omp_get_thread_num();
+  PagerankThreadWork& me = *works[t];
+  #pragma omp for schedule(dynamic, 2048) nowait
+  for (K v=i; v<i+n; v++) {
+    T e = pagerankCalculateRankDeltaW<SLEEP>(a, r, f, vfrom, efrom, v, c0, sp, sd, me.rnd);
+    err = max(err, e);  // li-norm
+  }
+  me.error = err;
 }
 
 
@@ -158,6 +184,47 @@ void pagerankCalculateHelperOmpW(vector<T>& a, const vector<T>& c, const vector<
 }
 
 
+template <bool SLEEP=false, class K, class T>
+void pagerankCalculateHelperBarrierfreeOmpW(vector<T>& a, const vector<T>& r, const vector<T>& f, const vector<K>& vfrom, const vector<K>& efrom, K i, K n, T c0, float SP, int SD, vector<PagerankThreadWork*>& works) {
+  const int chunkSize = 2048;
+  const int stealSize = chunkSize/4;
+  double sp = double(SP)/n;
+  milliseconds sd(SD);
+  double err = 0;
+  // 0. Reset thread works.
+  int t = omp_get_thread_num();
+  PagerankThreadWork& me = *works[t];
+  me.clear();
+  // 1. Perform work assigned to me.
+  #pragma omp for schedule(dynamic, 2048) nowait
+  for (K v=i; v<i+n; ++v) {
+    if (me.stolen)  continue;
+    if (me.empty()) me.updateRange(v, min(v+chunkSize, i+n));
+    T e = pagerankCalculateRankDeltaW<SLEEP>(a, r, f, vfrom, efrom, v, c0, sp, sd, me.rnd);
+    err = max(err, e);  // li-norm
+    ++me.begin;
+  }
+  while (true) {
+    // 2. Perform remaining/stolen work.
+    while (!me.empty()) {
+      T e = pagerankCalculateRankDeltaW<SLEEP>(a, r, f, vfrom, efrom, K(me.begin++), c0, sp, sd, me.rnd);
+      err = max(err, e);  // li-norm
+    }
+    // 3. Find a busy thread (victim), who has work.
+    int b = pagerankBusyThread(works, me.rnd);
+    if (b<0) break;
+    // 4. Steal work from victim.
+    PagerankThreadWork& victim = *works[b];
+    if (pagerankStealWorkSize(me, victim, stealSize)) continue;
+    pagerankStealWorkIfSlow<true>(me, victim, 1, [&](size_t begin) {  // or if stuck
+      pagerankCalculateRankW(a, c, vfrom, efrom, K(begin), c0, sp, sd, me.rnd);
+      sleep_for(microseconds(4));
+    });
+  }
+  me.error = err;
+}
+
+
 
 
 // PAGERANK-ERROR
@@ -165,12 +232,19 @@ void pagerankCalculateHelperOmpW(vector<T>& a, const vector<T>& c, const vector<
 // For convergence check.
 
 template <class K, class T>
-T pagerankErrorOmp(const vector<T>& x, const vector<T>& y, K i, K N, int EF) {
+inline T pagerankErrorOmp(const vector<T>& x, const vector<T>& y, K i, K N, int EF) {
   switch (EF) {
     case 1:  return l1NormOmp(x, y, i, N);
     case 2:  return l2NormOmp(x, y, i, N);
     default: return liNormOmp(x, y, i, N);
   }
+}
+
+inline double pagerankErrorBarrierfreeOmp(vector<PagerankThreadWork*>& works) {
+  double a = 0;
+  for (int t=0; t<works.size(); ++t)
+    a = max(a, double(works[t]->error));  // li-norm
+  return a;
 }
 
 
