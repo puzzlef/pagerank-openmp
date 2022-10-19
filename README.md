@@ -178,6 +178,10 @@ $ ...
 - [PageRank Algorithm, Mining massive Datasets (CS246), Stanford University](https://www.youtube.com/watch?v=ke9g8hB0MEo)
 - [The PageRank Citation Ranking: Bringing Order to the Web; Larry Page et al. (1998)](https://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.38.5427)
 - [The University of Florida Sparse Matrix Collection; Timothy A. Davis et al. (2011)](https://doi.org/10.1145/2049662.2049663)
+- [Iterating over the array in random order](https://stackoverflow.com/a/18994414/1413259)
+- [std::atomic | compare_exchange_weak vs. compare_exchange_strong](https://stackoverflow.com/a/15366555/1413259)
+- [Parallel OpenMP loop with break statement](https://stackoverflow.com/a/9836422/1413259)
+- [OpenMP: are local variables automatically private?](https://stackoverflow.com/a/30026383/1413259)
 - [What's the difference between "static" and "dynamic" schedule in OpenMP?](https://stackoverflow.com/a/10852852/1413259)
 - [OpenMP Dynamic vs Guided Scheduling](https://stackoverflow.com/a/43047074/1413259)
 
