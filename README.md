@@ -151,9 +151,20 @@ modern hardware.
 - [An Efficient Practical Non-Blocking PageRank Algorithm for Large Scale Graphs; Hemalatha Eedi et al. (2021)](https://ieeexplore.ieee.org/document/9407114)
 - [PageRank Algorithm, Mining massive Datasets (CS246), Stanford University](https://www.youtube.com/watch?v=ke9g8hB0MEo)
 - [The PageRank Citation Ranking: Bringing Order to the Web; Larry Page et al. (1998)](https://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.38.5427)
+- [Ranking nodes in growing networks: When PageRank fails; Mariani et al. (2015)](https://www.nature.com/articles/srep16181)
+- [Local Approximation of PageRank and Reverse PageRank; Bar-Yossef et al. (2008)](https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/34455.pdf)
+- [PageRank Beyond the Web; David F. Gleich (2015)](https://www.cs.purdue.edu/homes/dgleich/publications/Gleich%202015%20-%20prbeyond.pdf)
+- [Some methods of speeding up the convergence of iteration methods; Boris T. Polyak (1964)](https://www.researchgate.net/publication/243648538_Some_methods_of_speeding_up_the_convergence_of_iteration_methods)
 - [The University of Florida Sparse Matrix Collection; Timothy A. Davis et al. (2011)](https://doi.org/10.1145/2049662.2049663)
+- [When to Stop Slowly Convergent Iteration?; Prof. W. Kahan](https://people.eecs.berkeley.edu/~wkahan/Math128/SlowIter.pdf)
+- [Simple Trick to Dramatically Improve Speed of Convergence; Vincent Granville](https://www.datasciencecentral.com/simple-trick-to-dramatically-improve-speed-of-convergence/)
 - [What's the difference between "static" and "dynamic" schedule in OpenMP?](https://stackoverflow.com/a/10852852/1413259)
 - [OpenMP Dynamic vs Guided Scheduling](https://stackoverflow.com/a/43047074/1413259)
+- [Block Compressed Row Format (BSR)](https://scipy-lectures.org/advanced/scipy_sparse/bsr_matrix.html)
+- [Aitken's delta-squared process](https://en.wikipedia.org/wiki/Aitken%27s_delta-squared_process)
+- [Fixed-point iteration](https://en.wikipedia.org/wiki/Fixed-point_iteration)
+- [Steffensen's method](https://en.wikipedia.org/wiki/Steffensen%27s_method)
+- [Rate of convergence](https://en.wikipedia.org/wiki/Rate_of_convergence)
 
 <br>
 <br>
